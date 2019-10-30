@@ -38,7 +38,7 @@ registerBlockType('qubely/image', {
         alignment: {
             type: 'object',
             default: {
-                md: 'left'
+                md: 'center'
             },
             style: [{
                 selector: '{{QUBELY}} .qubely-block-image {text-align: {{alignment}};}'
