@@ -30,7 +30,7 @@ class PageListModal extends Component {
             layer: 'single',
             searchContext: '',
             isSearchEnable: false,
-            notFoundMessage: 'Sorry we couldn\'t find your match request!',
+            notFoundMessage: 'Sorry, we couldn\'t find the match.',
             requestFailedMsg: '',
             spinner: false,
             lazyloadThrottleTimeout: 0,
@@ -198,7 +198,7 @@ class PageListModal extends Component {
         }
 
         if (itemType != 'saved_blocks') {
-            currentPageData = priceFilter == 'pro' ? currentPageData.filter(item => item.pro == true) : priceFilter == 'pro' ? currentPageData.filter(item => item.pro == false) : currentPageData;
+            currentPageData = priceFilter == 'pro' ? currentPageData.filter(item => item.pro == true) : (priceFilter == 'free' ? currentPageData.filter(item => item.pro == false) : currentPageData);
         }
 
         if (this.state.isSearchEnable) {
@@ -278,7 +278,9 @@ class PageListModal extends Component {
         this.setState({
             itemType: 'block',
             layer: 'single',
-            parent_id: ''
+            parent_id: '',
+            searchContext: '',
+            priceFilter: ''
         })
     }
 
@@ -328,8 +330,8 @@ class PageListModal extends Component {
                                         }
                                     }
                                 });
-                                if (index === -1) {
-                                    layoutCategories.push({ name: cat.name, slug: cat.slug, count: 0 })
+                                if (index == -1) {
+                                    layoutCategories.push({ name: cat.name, slug: cat.slug, count: item.parentID == 0 ? 1 : 0 })
                                 }
                             })
                         }
@@ -365,7 +367,9 @@ class PageListModal extends Component {
         this.setState({
             itemType: 'layout',
             layer: 'multiple',
-            parent_id: ''
+            parent_id: '',
+            searchContext: '',
+            priceFilter: ''
         })
     }
 
@@ -385,18 +389,24 @@ class PageListModal extends Component {
                     layer: 'block',
                     itemType: 'saved_blocks',
                     savedBlocks: response.data,
+                    searchContext:'',
+                    priceFilter: ''
                 });
             }).catch(error => {
                 requestFailedMsg.push(error.code + ' : ' + error.message);
                 this.setState({
                     loading: false,
-                    requestFailedMsg
+                    requestFailedMsg,
+                    searchContext:'',
+                    priceFilter: ''
                 });
             });
         } else {
             this.setState({
                 layer: 'block',
-                itemType: 'saved_blocks'
+                itemType: 'saved_blocks',
+                searchContext: '',
+                priceFilter: ''
             });
         }
     }
@@ -501,7 +511,8 @@ class PageListModal extends Component {
         if (type == 'heading') {
             if (itemType == 'block') {
                 if (selectedBlockCategory == '') {
-                    blockCategories.forEach(function (data) { count = count + data.count; });
+                    count = singleCount
+                    //blockCategories.forEach(function (data) { count = count + data.count; });
                 } else {
                     blockCategories.forEach(function (data) {
                         if (data.slug == selectedBlockCategory) {
@@ -513,7 +524,8 @@ class PageListModal extends Component {
             } else {
                 if (this.state.layer == 'multiple') {
                     if (selectedLayoutCategory == '') {
-                        layoutCategories.forEach(function (data) { count = count + data.count; });
+                        //layoutCategories.forEach(function (data) { count = count + data.count; });
+                        count = singleCount
                     } else {
                         layoutCategories.forEach(function (data) {
                             if (data.slug == selectedLayoutCategory) {
@@ -529,7 +541,7 @@ class PageListModal extends Component {
         } else {
             if (itemType == 'block') {
                 Object.keys(blockData).forEach(function (key) { count = count + blockData[key].length; });
-                return count;
+                return count
             } else {
                 layoutCategories.forEach(function (data) { count = count + data.count; });
                 return count
@@ -560,7 +572,7 @@ class PageListModal extends Component {
 
                     <div className="qubely-template-list-header">
                         <button className={this.state.itemType == 'block' ? 'active' : ''} onClick={e => this._onlickBlocksTab()}> {__('Sections')} </button>
-                        <button className={this.state.itemType == 'layout' ? 'active' : ''} onClick={e => this._onlickLayoutsTab()}> {__('Bundles')} </button>
+                        <button className={this.state.itemType == 'layout' ? 'active' : ''} onClick={e => this._onlickLayoutsTab()}> {__('Starter Packs')} </button>
                         <button className={this.state.itemType == 'saved_blocks' ? 'active' : ''} onClick={e => this._onlickSavedBlocksTab()}> {__('Saved')} </button>
                         <button className="qubely-builder-close-modal" onClick={e => { ModalManager.close() }} >
                             <i className={"fas fa-times"} />
@@ -580,9 +592,9 @@ class PageListModal extends Component {
                                 <li
                                     className={itemType == 'block' ? '' == selectedBlockCategory ? 'active' : '' : '' == selectedLayoutCategory ? 'active' : ''}
                                     onClick={() => this._OnChangeCategory('')}>
-                                    {__('All ')}{itemType == 'block' ? 'Sections' : 'Bundles'}
+                                    {__('All ')}{itemType == 'block' ? 'Sections' : 'Starter Packs'}
                                     <span>
-                                        {this._getDataLength('category')}
+                                        {this._getDataLength('category', currentPageData.length)}
                                     </span>
                                 </li>
                                 {
@@ -611,16 +623,16 @@ class PageListModal extends Component {
                                 <span className={"qubely-template-back"} onClick={() => this.setState({ layer: 'multiple', parent_id: '' })}><span className="dashicons dashicons-arrow-left-alt" />&nbsp;</span>
                             }
                             {this._getDataLength('heading', currentPageData.length)}&nbsp;
-                            {itemType == 'block' ? __('Sections') : this.state.layer == 'single' ? __('Layouts') : __('Layout Bundles')}
+                            {itemType == 'block' ? __('Sections') : this.state.layer == 'single' ? __('Layouts') : __('Starter Packs')}
                         </h4>
-                        {/* <div className="qubely-template-filter-button-group">
+                        <div className="qubely-template-filter-button-group">
                             <button onClick={() => this._changePriceFilter()} className={'' == this.state.priceFilter ? 'active' : ''}>{__('All')}</button>
                             <button onClick={() => this._changePriceFilter('free')} className={'free' == this.state.priceFilter ? 'active' : ''}>{__('Free')}</button>
                             <button onClick={() => this._changePriceFilter('pro')} className={'pro' == this.state.priceFilter ? 'active' : ''}>
                                 <img src={qubely_admin.plugin+'assets/img/icon-premium.svg'} alt=""/>
                                 {__('Premium')}
                             </button>
-                        </div> */}
+                        </div>
                     </div>}
 
                     {!this.state.loading ?
