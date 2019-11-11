@@ -3,12 +3,12 @@ const { CssGenerator: { CssGenerator } } = wp.qubelyComponents
 
 const endpoint = '/qubely/v1/save_block_css'
 
-const API_fetch = (post_id, block_css) => {
+const API_fetch = (post_id, block_css, is_remain) => {
     const json = JSON.stringify(block_css.interaction)
     return wp.apiFetch({
         path: endpoint,
         method: 'POST',
-        data: { block_css: block_css.css, interaction: json, post_id }
+        data: { block_css: block_css.css, interaction: json, post_id, is_remain }
     }).then(data => data)
 }
 /**
@@ -74,9 +74,36 @@ function innerBlocks(blocks, type = false) {
     return { css: __CSS, interaction }
 }
 
+
+function isQubelyBlock(blocks){
+    let isQubely = false;
+    blocks.forEach( block => {
+        if(block.name.indexOf('qubely/')!= -1){
+            isQubely = true;
+        }
+        if (block.innerBlocks && (block.innerBlocks).length > 0 && isQubely != true) {
+            block.innerBlocks.forEach( bl => {
+                if(bl.name.indexOf('qubely/')!= -1){
+                    isQubely = true;
+                }
+                if (bl.innerBlocks && (bl.innerBlocks).length > 0 && isQubely != true) {
+                    bl.innerBlocks.forEach( b => {
+                        if(b.name.indexOf('qubely/')!= -1){
+                            isQubely = true;
+                        }
+                    })
+                }
+            })
+        }
+    })
+    return isQubely;
+}
+
+
 const ParseCss = (setDatabase = true) => {
     window.bindCss = true
     const { getBlocks } = select('core/block-editor')
+    const isRemain = isQubelyBlock(getBlocks())
     const { getCurrentPostId } = select('core/editor')
     let __blocks = { css: '', interaction: {} };
     if (typeof window.globalData != 'undefined') {
@@ -85,11 +112,9 @@ const ParseCss = (setDatabase = true) => {
     let parseData = innerBlocks(getBlocks(), true)
     __blocks.interaction = parseData.interaction
     __blocks.css += parseData.css
-    if (__blocks.css !== '') {
-        localStorage.setItem('qubelyCSS', __blocks)
-        if (setDatabase) {
-            API_fetch(getCurrentPostId(), __blocks).then(data => { })
-        }
+    localStorage.setItem('qubelyCSS', __blocks)
+    if (setDatabase) {
+        API_fetch(getCurrentPostId(), __blocks, isRemain ).then(data => { })
     }
     setTimeout(() => {
         window.bindCss = false
