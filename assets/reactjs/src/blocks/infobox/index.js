@@ -12,6 +12,9 @@ registerBlockType('qubely/infobox', {
     category: 'qubely',
     supports: { align: false },
     keywords: [__('service'), __('feature'), __('info')],
+    example: {
+		attributes: {},
+	},
     attributes: {
         uniqueId: { type: 'string', default: '' },
          // Global
@@ -106,7 +109,7 @@ registerBlockType('qubely/infobox', {
                         { key: 'layout', relation: '!=', value: 4 },
                         { key: 'mediaType', relation: '==', value: 'image' }
                     ],
-                    selector: '{{QUBELY}} .qubely-info-box-media img {width: {{imageWidth}};} {{QUBELY}} .qubely-info-box-media .qubely-image-placeholder {height: {{imageWidth}}; width: {{imageWidths}};}'
+                    selector: '{{QUBELY}} .qubely-info-box-media {width: {{imageWidth}};} {{QUBELY}} .qubely-info-box-media img {width: 100%;} {{QUBELY}} .qubely-info-box-media .qubely-image-placeholder {height: {{imageWidth}}; width: {{imageWidths}};}'
                 }
             ]
         },

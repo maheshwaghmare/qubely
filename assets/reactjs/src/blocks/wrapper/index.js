@@ -12,6 +12,19 @@ registerBlockType('qubely/wrapper', {
     icon: <img src={qubely_admin.plugin + 'assets/img/blocks/block-wrapper.svg'} alt={__('Icon Block')} />,
     supports: { align: false },
     keywords: [__('Block'), __('Block Wraper'), __('Wraper')],
+    example: {
+        attributes: {},
+        innerBlocks: [
+            {
+                name: 'qubely/icon',
+                attributes: {
+                    iconStyle: "fill",
+                    name: "fas fa-rocket"
+                },
+            },
+        ],
+
+    },
     attributes: {
         uniqueId: { type: 'string', default: '' },
         // Global
