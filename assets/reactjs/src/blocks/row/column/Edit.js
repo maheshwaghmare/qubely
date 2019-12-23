@@ -196,14 +196,13 @@ class Edit extends Component {
      */
     checkColumnStatus() {
         const { clientId } = this.props
-        const { getBlockRootClientId, getBlockAttributes, getPreviousBlockClientId, getNextBlockClientId, getBlockIndex, getBlock } = select('core/block-editor')
+        const { getBlockRootClientId, getPreviousBlockClientId, getNextBlockClientId, getBlockIndex, getBlock } = select('core/block-editor')
         const rootClientId = getBlockRootClientId(clientId)
-        const rootBlockAttributes = getBlockAttributes(rootClientId)
         const nextBlockId = getNextBlockClientId(clientId)
         const prevBlockId = getPreviousBlockClientId(clientId)
         const blockIndex = getBlockIndex(clientId, rootClientId)
 
-        return { columns: rootBlockAttributes.columns, nextBlockId, prevBlockId, blockIndex }
+        return { nextBlockId, prevBlockId, blockIndex }
     }
 
 
@@ -304,9 +303,19 @@ class Edit extends Component {
             isSelected,
             clientId
         } = this.props
-        
+
         const { rowWidth, resizing, responsiveDevice } = this.state
-        const { columns, nextBlockId, blockIndex } = this.checkColumnStatus()
+        const { getBlockRootClientId, getBlockAttributes } = select('core/block-editor')
+        const rootClientId = getBlockRootClientId(clientId)
+        const rootBlockAttributes = getBlockAttributes(rootClientId)
+        let columns, nextBlockId, blockIndex;
+        if (rootBlockAttributes) {
+            let columnStatus = this.checkColumnStatus()
+            columns = rootBlockAttributes.columns
+            nextBlockId = columnStatus.nextBlockId
+            blockIndex = columnStatus.blockIndex
+        }
+
 
         let resigingClass = 'qubely-column-resizer'
         if (nextBlockId !== null && isSelected) {
@@ -315,6 +324,8 @@ class Edit extends Component {
         if (resizing) {
             resigingClass += ' is-resizing'
         }
+        const { getBlockOrder } = select('core/block-editor')
+        let hasChildBlocks = getBlockOrder(clientId).length > 0
         if (uniqueId) { CssGenerator(this.props.attributes, 'column', uniqueId); }
 
         return (
@@ -408,7 +419,14 @@ class Edit extends Component {
 
                         <div className={`qubely-column qubely-column-admin qubely-block-${uniqueId}`} data-column-width={this.props.attributes.colWidth.md}>
                             <div className={`qubely-column-inner`}>
-                                <InnerBlocks templateLock={false} />
+                                <InnerBlocks
+                                    templateLock={false}
+                                    renderAppender={(
+                                        hasChildBlocks ?
+                                            undefined :
+                                            () => <InnerBlocks.ButtonBlockAppender />
+                                    )}
+                                />
                             </div>
                         </div>
                     </ResizableBox>
