@@ -153,6 +153,11 @@ const checkDepends = (settings, selectData, key, indexStyle) => {
 
 
 export const CssGenerator = (settings, blockName, blockID, isInline = false) => {
+    // console.log('old css generator');
+    // console.log('settings : ', settings);
+    // console.log('blockName : ', blockName);
+    // console.log('blockID : ', blockID);
+    // console.log('isInline : ', isInline);
     if (!blockID) return;
     let __CSS = '',
         md = [],

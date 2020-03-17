@@ -1,11 +1,18 @@
-import { generateCSS, updateCSS } from './generateCSS';
-const { Fragment, Component } = wp.element;
+import {
+    generateCSS,
+    updateCSS,
+    appendAllCSS
+} from './generateCSS';
+
+const {
+    Fragment,
+    Component
+} = wp.element;
+
+const { BlockControls } = wp.blockEditor
 const diff = require("deep-object-diff").diff;
-const { PluginBlockSettingsMenuItem } = wp.editPost;
-const { InspectorControls, BlockControls, RichText } = wp.blockEditor
-
 const { createHigherOrderComponent } = wp.compose;
-
+const { PluginBlockSettingsMenuItem } = wp.editPost;
 
 export default function withCSSGenerator() {
 
@@ -43,46 +50,46 @@ export default function withCSSGenerator() {
 
                 let _CSS = '';
                 const { attributes: { uniqueId } } = this.props;
-                const nonResponsiveAttributes = Object.keys(nonResponsiveCSS);
-                const responsiveAttributes = Object.keys(responsiveCSS);
+                // const nonResponsiveAttributes = Object.keys(nonResponsiveCSS);
+                // const responsiveAttributes = Object.keys(responsiveCSS);
 
-                if (nonResponsiveAttributes.length > 0) {
-                    nonResponsiveAttributes.forEach(attr => {
-                        if (nonResponsiveCSS[attr]) {
-                            if (typeof nonResponsiveCSS[attr] === 'array') {
-                                _CSS += nonResponsiveCSS[attr].join(' ');
-                            } else {
-                                _CSS += nonResponsiveCSS[attr];
-                            }
-                        }
-                    });
-                }
-                if (responsiveAttributes.length > 0) {
-                    responsiveAttributes.forEach(attr => {
-                        const currentAttribute = responsiveCSS[attr];
-                        let attrKeys = Object.keys(currentAttribute);
-                        attrKeys.forEach(key => {
-                            if (key !== 'nonResponsiveCSS' && typeof currentAttribute[key] === 'object' && Object.keys(currentAttribute[key]).length > 0) {
-                                if (currentAttribute[key].hasOwnProperty('md') && typeof currentAttribute[key].md !== 'undefined') {
-                                    _CSS += currentAttribute[key].md;
-                                } else if (currentAttribute[key].hasOwnProperty('sm') && typeof currentAttribute[key].sm !== 'undefined') {
-                                    // _CSS += '@media (max-width: 1199px) {' + currentAttribute[key].sm + '}';
-                                    if (attr === 'hideTablet') {
-                                        _CSS += '@media (max-width: 1199px) and (min-width: 992px)  {' + currentAttribute[key].sm + '}';
-                                    } else if (attr === 'hideMobile') {
-                                        _CSS += '@media (max-width: 1199px) {' + currentAttribute[key].sm + '}';
-                                    }
-                                } else if (currentAttribute[key].hasOwnProperty('xs') && typeof currentAttribute[key].xs !== 'undefined') {
-                                    _CSS += '@media (max-width: 991px) {' + currentAttribute[key].xs + '}';
-                                }
-                            } else if (key === 'nonResponsiveCSS' && currentAttribute.nonResponsiveCSS.length > 0) {
-                                _CSS += currentAttribute.nonResponsiveCSS.join(' ');
-                            }
-                        });
-                    });
-                }
+                // if (nonResponsiveAttributes.length > 0) {
+                //     nonResponsiveAttributes.forEach(attr => {
+                //         if (nonResponsiveCSS[attr]) {
+                //             if (typeof nonResponsiveCSS[attr] === 'array') {
+                //                 _CSS += nonResponsiveCSS[attr].join(' ');
+                //             } else {
+                //                 _CSS += nonResponsiveCSS[attr];
+                //             }
+                //         }
+                //     });
+                // }
+                // if (responsiveAttributes.length > 0) {
+                //     responsiveAttributes.forEach(attr => {
+                //         const currentAttribute = responsiveCSS[attr];
+                //         let attrKeys = Object.keys(currentAttribute);
+                //         attrKeys.forEach(key => {
+                //             if (key !== 'nonResponsiveCSS' && typeof currentAttribute[key] === 'object' && Object.keys(currentAttribute[key]).length > 0) {
+                //                 if (currentAttribute[key].hasOwnProperty('md') && typeof currentAttribute[key].md !== 'undefined') {
+                //                     _CSS += currentAttribute[key].md;
+                //                 } else if (currentAttribute[key].hasOwnProperty('sm') && typeof currentAttribute[key].sm !== 'undefined') {
+                //                     // _CSS += '@media (max-width: 1199px) {' + currentAttribute[key].sm + '}';
+                //                     if (attr === 'hideTablet') {
+                //                         _CSS += '@media (max-width: 1199px) and (min-width: 992px)  {' + currentAttribute[key].sm + '}';
+                //                     } else if (attr === 'hideMobile') {
+                //                         _CSS += '@media (max-width: 1199px) {' + currentAttribute[key].sm + '}';
+                //                     }
+                //                 } else if (currentAttribute[key].hasOwnProperty('xs') && typeof currentAttribute[key].xs !== 'undefined') {
+                //                     _CSS += '@media (max-width: 991px) {' + currentAttribute[key].xs + '}';
+                //                 }
+                //             } else if (key === 'nonResponsiveCSS' && currentAttribute.nonResponsiveCSS.length > 0) {
+                //                 _CSS += currentAttribute.nonResponsiveCSS.join(' ');
+                //             }
+                //         });
+                //     });
+                // }
 
-                _CSS = _CSS.replace(new RegExp('{{QUBELY}}', "g"), '.qubely-block-' + uniqueId)
+                _CSS = appendAllCSS(responsiveCSS, nonResponsiveCSS, uniqueId)
 
                 let styleSelector = window.document;
                 if (styleSelector.getElementById('qubely-block-' + uniqueId) === null) {
@@ -206,7 +213,7 @@ export default function withCSSGenerator() {
                             }
                             changedAttributes.forEach(changedAttribute => {
                                 updateCSS(blockAttributes, attributes, (attribute, key, value) => updateState(attribute, key, value), changedAttribute);
-                                this.saveCSS(newState.responsiveCSS, newState.nonResponsiveCSS, 'update');
+                                this.saveCSS(newState.responsiveCSS, newState.nonResponsiveCSS);
                             });
                             this.setState({
                                 responsiveCSS: newState.responsiveCSS,
@@ -237,7 +244,6 @@ export default function withCSSGenerator() {
             }
             render() {
                 const { attributes: { showCopyAttr } } = this.props;
-                console.log('state : ', this.state);
                 return (
                     <Fragment>
                         {

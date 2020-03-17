@@ -237,7 +237,9 @@ const handleObjects = (settings, key, cssSelector, updateStyle, isInline, sendBa
             if (objectCss.action == 'append') {
                 nonResponsiveCSS.push(cssSelector + objectCss.data);
             } else {
-                updateStyle(key, undefined, singleField(cssSelector, key, objectCss.data))
+                if (updateStyle !== false) {
+                    updateStyle(key, undefined, singleField(cssSelector, key, objectCss.data));
+                }
                 nonResponsiveCSS.push(singleField(cssSelector, key, objectCss.data));
             }
         }
@@ -247,18 +249,25 @@ const handleObjects = (settings, key, cssSelector, updateStyle, isInline, sendBa
     if (sendBack) {
         return (key, 'Object', temp);
     }
-    updateStyle(key, 'Object', temp);
+    if (updateStyle !== false) {
+        updateStyle(key, 'Object', temp);
+    }
+
 }
 
 const handleNonObjects = (settings, key, cssSelector, updateStyle, isInline, sendBack) => {
     let temp = [];
-    if (key == 'hideTablet') {
+    if (key == 'hideTablet' && isInline) {
         temp.push({ sm: singleField(cssSelector, key, settings[key]) });
-        !sendBack && updateStyle(key, 'Object', temp);
-    } else if (key == 'hideMobile') {
+        if (!sendBack && updateStyle !== false) {
+            updateStyle(key, 'Object', temp);
+        }
+    } else if (key == 'hideMobile' && isInline) {
         temp.push({ xs: singleField(cssSelector, key, settings[key]) });
-        !sendBack && updateStyle(key, 'Object', temp);
-    } else if (typeof settings[key] !== 'undefined') {
+        if (!sendBack && updateStyle !== false) {
+            updateStyle(key, 'Object', temp);
+        }
+    } else if (typeof settings[key] !== 'undefined' && updateStyle !== false) {
         !sendBack && updateStyle(key, undefined, singleField(cssSelector, key, settings[key]));
     }
     if (sendBack && temp.length > 0) {
@@ -267,9 +276,56 @@ const handleNonObjects = (settings, key, cssSelector, updateStyle, isInline, sen
         return singleField(cssSelector, key, settings[key]);
     }
 }
+export const appendAllCSS = (responsiveCSS, nonResponsiveCSS, uniqueId) => {
 
-export const generateCSS = (blockAttributes, settings, updateStyle, isInline = false) => {
+    let _CSS = '';
 
+    const nonResponsiveAttributes = Object.keys(nonResponsiveCSS);
+    const responsiveAttributes = Object.keys(responsiveCSS);
+
+    if (nonResponsiveAttributes.length > 0) {
+        nonResponsiveAttributes.forEach(attr => {
+            if (nonResponsiveCSS[attr]) {
+                if (typeof nonResponsiveCSS[attr] === 'array') {
+                    _CSS += nonResponsiveCSS[attr].join(' ');
+                } else {
+                    _CSS += nonResponsiveCSS[attr];
+                }
+            }
+        });
+    }
+    if (responsiveAttributes.length > 0) {
+        responsiveAttributes.forEach(attr => {
+            const currentAttribute = responsiveCSS[attr];
+            let attrKeys = Object.keys(currentAttribute);
+            attrKeys.forEach(key => {
+                if (key !== 'nonResponsiveCSS' && typeof currentAttribute[key] === 'object' && Object.keys(currentAttribute[key]).length > 0) {
+                    if (currentAttribute[key].hasOwnProperty('md') && typeof currentAttribute[key].md !== 'undefined') {
+                        _CSS += currentAttribute[key].md;
+                    } else if (currentAttribute[key].hasOwnProperty('sm') && typeof currentAttribute[key].sm !== 'undefined') {
+                        // _CSS += '@media (max-width: 1199px) {' + currentAttribute[key].sm + '}';
+                        if (attr === 'hideTablet') {
+                            _CSS += '@media (max-width: 1199px) and (min-width: 992px)  {' + currentAttribute[key].sm + '}';
+                        } else if (attr === 'hideMobile') {
+                            _CSS += '@media (max-width: 1199px) {' + currentAttribute[key].sm + '}';
+                        }
+                    } else if (currentAttribute[key].hasOwnProperty('xs') && typeof currentAttribute[key].xs !== 'undefined') {
+                        _CSS += '@media (max-width: 991px) {' + currentAttribute[key].xs + '}';
+                    }
+                } else if (key === 'nonResponsiveCSS' && currentAttribute.nonResponsiveCSS.length > 0) {
+                    _CSS += currentAttribute.nonResponsiveCSS.join(' ');
+                }
+            });
+        });
+    }
+console.log('_CSS : ',_CSS);
+console.log('css : ',_CSS.replace(new RegExp('{{QUBELY}}', "g"), '.qubely-block-' + uniqueId));
+    return (_CSS.replace(new RegExp('{{QUBELY}}', "g"), '.qubely-block-' + uniqueId));
+
+}
+
+
+export const generateCSS = (blockAttributes, settings, updateStyle = false, isInline = false) => {
     let responsiveCSS = {}, nonResponsiveCSS = {};
 
     Object.keys(settings).forEach((key) => {
@@ -286,11 +342,18 @@ export const generateCSS = (blockAttributes, settings, updateStyle, isInline = f
             });
         }
     });
+
     const response = {
         responsiveCSS: responsiveCSS,
         nonResponsiveCSS: nonResponsiveCSS
     }
-    updateStyle(response);
+    if (isInline) {
+        return appendAllCSS(responsiveCSS, nonResponsiveCSS, settings.uniqueId)
+    }
+    if (updateStyle !== false) {
+        updateStyle(response);
+    }
+
 }
 
 
