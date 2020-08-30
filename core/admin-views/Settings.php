@@ -157,20 +157,6 @@ class Settings
                                 'size' => 'regular',
                             )
                         )
-                    ),
-                    "mailchimp" => array(
-                        'label' => 'MailChimp',
-                        'fields' => array(
-                            'mailchimp_api_key' => array(
-                                'type' => 'text',
-                                'label' => __('Default Form Action', 'qubely'),
-                                'default' => '',
-                                'desc' => sprintf(__('Enter your MailChimp Form Action, %1$s or Create a Signup form here %2$s', 'qubely'), '<a href="https://mailchimp.com/help/add-a-signup-form-to-your-website/" target="_blank">', '</a>'),
-                                'placeholder' => '',
-                                'suffix' => '',
-                                'size' => 'regular',
-                            ),
-                        ),
                     )
                 )
             ),
