@@ -1,0 +1,13 @@
+{
+    "name": "qubely/qubely",
+    "description": "Contributors: **themeum**",
+    "type": "wordpress-plugin",
+    "license": "ISC",
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Qubely\\": "./core"
+        }
+    }
+}

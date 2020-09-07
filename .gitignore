@@ -73,6 +73,7 @@ assets/js/blocks.build.min.js
 assets/js/blocks.build.js.map
 assets/reactjs/node_modules/
 
+composer-lock.json
 package-lock.json
 .idea/
 .vscode/
@@ -80,3 +81,5 @@ package-lock.json
 assets/reactjs/yarn.lock
 *.zip
 qubely/*
+
+/vendor/
